@@ -1,0 +1,167 @@
+auto neighborTileExploring =
+			[&](/*FacingDirection dir*/)
+			{
+				tileRect =
+				{
+					neighborTile->x * Initializer.TEXTURE_RES,
+					neighborTile->y * Initializer.TEXTURE_RES,
+					Initializer.TEXTURE_RES,
+					Initializer.TEXTURE_RES
+				};
+				/*if (neighborTile->generationTileType == Tile::GenerationTileType::TrueWall ||
+					neighborTile->generationTileType == Tile::GenerationTileType::Wall)
+					switch (dir)
+					{
+					case None:
+						break;
+					case Up:
+						tileRect =
+						{
+							neighborTile->x * Initializer.TEXTURE_RES,
+							neighborTile->y * Initializer.TEXTURE_RES + Initializer.TEXTURE_RES / 4,
+							Initializer.TEXTURE_RES,
+							3 * Initializer.TEXTURE_RES / 4
+						};
+						break;
+					case Down:
+						tileRect =
+						{
+							neighborTile->x * Initializer.TEXTURE_RES,
+							neighborTile->y * Initializer.TEXTURE_RES,
+							Initializer.TEXTURE_RES,
+							Initializer.TEXTURE_RES / 8
+						};
+						break;
+					case Right:
+						tileRect =
+						{
+							neighborTile->x * Initializer.TEXTURE_RES,
+							neighborTile->y * Initializer.TEXTURE_RES,
+							5 * Initializer.TEXTURE_RES / 16,
+							Initializer.TEXTURE_RES
+						};
+						break;
+					case Left:
+						tileRect =
+						{
+							neighborTile->x * Initializer.TEXTURE_RES + 11 * Initializer.TEXTURE_RES / 16,
+							neighborTile->y * Initializer.TEXTURE_RES,
+							5 * Initializer.TEXTURE_RES / 16,
+							Initializer.TEXTURE_RES
+						};
+						break;
+					}*/
+
+				if (!neighborTile->isExplored)
+					fogOfWarChanged = true;
+				if (neighborTile->x < topLeftExploredTile.x ||
+					topLeftExploredTile.x == -1)
+					topLeftExploredTile.x = neighborTile->x;
+				if (neighborTile->y < topLeftExploredTile.y ||
+					topLeftExploredTile.y == -1)
+					topLeftExploredTile.y = neighborTile->y;
+				if (neighborTile->x > bottomRightExploredTile.x ||
+					bottomRightExploredTile.x == -1)
+					bottomRightExploredTile.x = neighborTile->x;
+				if (neighborTile->y > bottomRightExploredTile.y ||
+					bottomRightExploredTile.y == -1)
+					bottomRightExploredTile.y = neighborTile->y;
+				neighborTile->isExplored = true;
+				SDL_RenderFillRect(Initializer.renderer, &tileRect);
+			};
+
+		neighborTileExploring(/*FacingDirection::None*/);
+		while (viewDistance > 0)
+		{
+			viewDistance--;
+			newMarkedTiles->RemoveList();
+			markedCellsCount = oldMarkedTiles->Count();
+			for (int i = 0; i < markedCellsCount; i++)
+				newMarkedTiles->Add((*oldMarkedTiles)[i]);
+			markedCellsCount = (*newMarkedTiles).Count();
+			oldMarkedTiles->RemoveList();
+			for (int i = 0; i < markedCellsCount; i++)
+			{
+				curTile = (*newMarkedTiles)[i];
+				neighborTile = map->tilemap->GetTile(curTile->x, curTile->y + 1);
+				if (neighborTile != nullptr &&
+					!oldMarkedTiles->Contains(neighborTile) &&
+					neighborTile->tileType == 0)
+				{
+					neighborTileExploring(/*FacingDirection::None*/);
+					oldMarkedTiles->Add(neighborTile);
+					markedTiles->Add(neighborTile);
+				}
+
+				neighborTile = map->tilemap->GetTile(curTile->x, curTile->y - 1);
+				if (neighborTile != nullptr &&
+					!oldMarkedTiles->Contains(neighborTile) &&
+					neighborTile->tileType == 0)
+				{
+					neighborTileExploring(/*FacingDirection::None*/);
+					oldMarkedTiles->Add(neighborTile);
+					markedTiles->Add(neighborTile);
+				}
+
+				neighborTile = map->tilemap->GetTile(curTile->x + 1, curTile->y);
+				if (neighborTile != nullptr &&
+					!oldMarkedTiles->Contains(neighborTile) &&
+					neighborTile->tileType == 0)
+				{
+					neighborTileExploring(/*FacingDirection::None*/);
+					oldMarkedTiles->Add(neighborTile);
+					markedTiles->Add(neighborTile);
+				}
+
+				neighborTile = map->tilemap->GetTile(curTile->x - 1, curTile->y);
+				if (neighborTile != nullptr &&
+					!oldMarkedTiles->Contains(neighborTile) &&
+					neighborTile->tileType == 0)
+				{
+					neighborTileExploring(/*FacingDirection::None*/);
+					oldMarkedTiles->Add(neighborTile);
+					markedTiles->Add(neighborTile);
+				}
+			}
+		}
+
+		markedCellsCount = (*markedTiles).Count();
+		for (int i = 0; i < markedCellsCount; i++)
+		{
+			curTile = (*markedTiles)[i];
+
+			// light the walls too
+			neighborTile = map->tilemap->GetTile(curTile->x, curTile->y + 1);
+			if (neighborTile != nullptr && markedTiles->Contains(neighborTile) == false && neighborTile->tileType == 1)
+				neighborTileExploring(/*FacingDirection::Down*/);
+			neighborTile = map->tilemap->GetTile(curTile->x, curTile->y - 1);
+			if (neighborTile != nullptr && markedTiles->Contains(neighborTile) == false && neighborTile->tileType == 1)
+			{
+				neighborTileExploring(/*FacingDirection::Up*/);
+				/*neighborTile = map->tilemap->GetTile(curTile->x, curTile->y - 2);
+				if (neighborTile != nullptr && markedTiles->Contains(neighborTile) == false && neighborTile->tileType == 1)
+					neighborTileExploring();*/
+			}
+			neighborTile = map->tilemap->GetTile(curTile->x + 1, curTile->y);
+			if (neighborTile != nullptr && markedTiles->Contains(neighborTile) == false && neighborTile->tileType == 1)
+				neighborTileExploring(/*FacingDirection::Right*/);
+			neighborTile = map->tilemap->GetTile(curTile->x - 1, curTile->y);
+			if (neighborTile != nullptr && markedTiles->Contains(neighborTile) == false && neighborTile->tileType == 1)
+				neighborTileExploring(/*FacingDirection::Left*/);
+
+			/*if (curTile->tileType == 1)
+			{
+				neighborTile = map->tilemap->GetTile(curTile->x + 1, curTile->y + 1);
+				if (neighborTile != nullptr && markedTiles->Contains(neighborTile) == false && neighborTile->tileType == 1)
+					neighborTileExploring();
+				neighborTile = map->tilemap->GetTile(curTile->x + 1, curTile->y - 1);
+				if (neighborTile != nullptr && markedTiles->Contains(neighborTile) == false && neighborTile->tileType == 1)
+					neighborTileExploring();
+				neighborTile = map->tilemap->GetTile(curTile->x - 1, curTile->y + 1);
+				if (neighborTile != nullptr && markedTiles->Contains(neighborTile) == false && neighborTile->tileType == 1)
+					neighborTileExploring();
+				neighborTile = map->tilemap->GetTile(curTile->x - 1, curTile->y - 1);
+				if (neighborTile != nullptr && markedTiles->Contains(neighborTile) == false && neighborTile->tileType == 1)
+					neighborTileExploring();
+			}*/
+		}
