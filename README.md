@@ -1,4 +1,4 @@
-# RoguelikeGame
+# Catacomb Knight
 
 Данный репозиторий содержит исходный код и исполняемый файл компьютерной 2D игры в жанре Roguelike **"Catacomb Knight"**.
 
